@@ -1,0 +1,9 @@
+{
+  "name": "docedit",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Document editor with RTL/LTR support, Google Fonts, code zones, multi-format export, and private share links",
+  "engines": {
+    "node": ">=18"
+  }
+}

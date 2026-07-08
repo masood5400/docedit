@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocEdit — سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<style>
+  :root {
+    --bg:#eef1f5; --panel:#fff; --border:#d9dee5; --text:#1c2330;
+    --muted:#6b7686; --accent:#2f6fed; --accent-soft:#e4edff;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:"Vazirmatn","Inter",system-ui,sans-serif; line-height:1.75;
+  }
+  header {
+    background:var(--panel); border-bottom:1px solid var(--border);
+    padding:12px 20px; display:flex; align-items:center; gap:10px;
+    position:sticky; top:0; z-index:10;
+  }
+  header .title { font-weight:700; font-size:17px; flex:1; }
+  header .meta { color:var(--muted); font-size:12px; }
+  main { max-width:860px; margin:26px auto; padding:0 14px; }
+  .doc {
+    background:var(--panel); border-radius:6px; padding:48px 56px;
+    box-shadow:0 2px 14px rgba(20,30,50,.12); font-size:16px;
+    overflow-wrap:break-word;
+  }
+  .doc h1{font-size:2em} .doc h2{font-size:1.55em} .doc h3{font-size:1.25em}
+  .doc img{max-width:100%; height:auto;}
+  .doc table{border-collapse:collapse; width:100%;}
+  .doc th,.doc td{border:1px solid var(--border); padding:6px 10px;}
+  .doc th{background:var(--accent-soft);}
+  .doc blockquote{margin:.8em 0; padding:.4em 1em; border-inline-start:4px solid var(--accent);
+    background:var(--accent-soft); border-radius:4px;}
+  .doc code{font-family:"JetBrains Mono",Consolas,monospace; font-size:.88em; background:#f4f6f8;
+    border:1px solid var(--border); border-radius:4px; padding:1px 5px; direction:ltr; unicode-bidi:embed;}
+  .doc pre.code-zone{direction:ltr; text-align:left; background:#f6f8fa; border:1px solid var(--border);
+    border-radius:8px; padding:14px 16px; overflow-x:auto; position:relative;
+    font-family:"JetBrains Mono",Consolas,monospace; font-size:13.5px; white-space:pre-wrap;}
+  .doc pre.code-zone code{background:none; border:none; padding:0; display:block;}
+  .doc [dir="rtl"]{text-align:right;} .doc [dir="ltr"]{text-align:left;}
+  nav.toc{border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin:0 0 1.6em; background:#f8fafc;}
+  nav.toc .toc-title{font-weight:700; font-size:1.15em; margin-bottom:.5em;}
+  nav.toc ul{list-style:none; margin:0; padding:0;}
+  nav.toc li{margin:.25em 0;}
+  nav.toc a{text-decoration:none; color:var(--accent);}
+  nav.toc .toc-l1{margin-inline-start:1.2em;} nav.toc .toc-l2{margin-inline-start:2.4em;}
+  nav.toc .toc-l3{margin-inline-start:3.6em;} nav.toc .toc-l4{margin-inline-start:4.8em;}
+  .copy-btn{position:absolute; top:6px; left:8px; font-size:11px; padding:2px 8px;
+    border:1px solid var(--border); border-radius:5px; background:#fff; cursor:pointer; opacity:.8;}
+  .copy-btn:hover{opacity:1;}
+  /* comments */
+  #comments { margin:30px 0 60px; }
+  #comments h2 { font-size:18px; }
+  .comment {
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:10px 14px; margin:10px 0;
+  }
+  .comment .who { font-weight:600; font-size:13px; }
+  .comment .when { color:var(--muted); font-size:11px; margin-inline-start:8px; }
+  .comment .body { margin-top:4px; font-size:14px; white-space:pre-wrap; }
+  #comment-form { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px; }
+  #comment-form input, #comment-form textarea {
+    width:100%; border:1px solid var(--border); border-radius:6px; padding:8px 10px;
+    font-family:inherit; font-size:14px; margin-bottom:8px; background:var(--bg);
+  }
+  #comment-form textarea { min-height:80px; resize:vertical; }
+  #comment-form button {
+    background:var(--accent); color:#fff; border:none; border-radius:6px;
+    padding:8px 22px; cursor:pointer; font-family:inherit; font-size:14px;
+  }
+  /* states */
+  .state {
+    max-width:480px; margin:12vh auto; background:var(--panel); border-radius:12px;
+    box-shadow:0 2px 14px rgba(20,30,50,.12); padding:40px 34px; text-align:center;
+  }
+  .state .icon { font-size:44px; }
+  .state h2 { margin:14px 0 6px; }
+  .state p { color:var(--muted); font-size:14px; margin:4px 0; }
+  @media (max-width:720px){ .doc{padding:22px 16px;} }
+  @media print { header, #comments { display:none; } body{background:#fff;} .doc{box-shadow:none;} }
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:20px">📝</span>
+  <span class="title" id="doc-title">…</span>
+  <span class="meta" id="doc-meta"></span>
+</header>
+
+<main>
+  <div id="content"></div>
+  <section id="comments" hidden>
+    <h2>💬 دیدگاه‌ها <span style="font-weight:400;font-size:13px;color:var(--muted)">/ Comments</span></h2>
+    <div id="comment-list"></div>
+    <div id="comment-form">
+      <input id="c-name" placeholder="نام شما / Your name" maxlength="60">
+      <textarea id="c-text" placeholder="دیدگاه خود را بنویسید… / Write a comment…" maxlength="2000"></textarea>
+      <button id="c-send">ارسال / Send</button>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="js/viewer.js"></script>
+</body>
+</html>

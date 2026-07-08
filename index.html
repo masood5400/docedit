@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocEdit — Document Editor &amp; Export Tools</title>
+
+<!-- Base Google Fonts (UI + defaults). More are loaded on demand by js/app.js -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+<!-- Syntax highlighting themes (light/dark switched by JS) -->
+<link id="hljs-theme-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<link id="hljs-theme-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" disabled>
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand" title="DocEdit">📝 <span>DocEdit</span></div>
+
+  <div class="toolbar" id="toolbar">
+    <!-- File -->
+    <div class="tb-group">
+      <button id="btn-new"  class="tb-btn" data-i18n-title="new">🗋</button>
+      <button id="btn-open" class="tb-btn" data-i18n-title="open">📂</button>
+      <div class="dropdown">
+        <button id="btn-export" class="tb-btn wide" data-i18n-title="export">💾 <span data-i18n="export">Export</span> ▾</button>
+        <div class="dropdown-menu" id="export-menu">
+          <button data-export="pdf-print" data-i18n="exp_pdf_print">PDF — print dialog (best quality)</button>
+          <button data-export="pdf"       data-i18n="exp_pdf">PDF — direct download</button>
+          <button data-export="docx"      data-i18n="exp_docx">Word (.docx)</button>
+          <button data-export="md"        data-i18n="exp_md">Markdown (.md)</button>
+          <button data-export="html"      data-i18n="exp_html">Web page (.html)</button>
+          <button data-export="txt"       data-i18n="exp_txt">Plain text (.txt)</button>
+          <button data-export="rtf"       data-i18n="exp_rtf">Rich text (.rtf)</button>
+        </div>
+      </div>
+      <button id="btn-publish" class="tb-btn" data-i18n-title="publish">🌐</button>
+    </div>
+
+    <!-- Undo / redo -->
+    <div class="tb-group">
+      <button class="tb-btn" data-cmd="undo" data-i18n-title="undo">↩</button>
+      <button class="tb-btn" data-cmd="redo" data-i18n-title="redo">↪</button>
+    </div>
+
+    <!-- Block format / font / size -->
+    <div class="tb-group">
+      <select id="sel-block" class="tb-select" data-i18n-title="paragraph_style">
+        <option value="p" data-i18n="fmt_p">Paragraph</option>
+        <option value="h1">H1</option>
+        <option value="h2">H2</option>
+        <option value="h3">H3</option>
+        <option value="h4">H4</option>
+        <option value="blockquote" data-i18n="fmt_quote">Quote</option>
+      </select>
+      <select id="sel-font" class="tb-select" data-i18n-title="font"></select>
+      <select id="sel-size" class="tb-select" data-i18n-title="font_size">
+        <option value="1">10</option><option value="2">13</option>
+        <option value="3" selected>16</option><option value="4">18</option>
+        <option value="5">24</option><option value="6">32</option><option value="7">48</option>
+      </select>
+    </div>
+
+    <!-- Inline styles -->
+    <div class="tb-group">
+      <button class="tb-btn" data-cmd="bold" data-i18n-title="bold"><b>B</b></button>
+      <button class="tb-btn" data-cmd="italic" data-i18n-title="italic"><i>I</i></button>
+      <button class="tb-btn" data-cmd="underline" data-i18n-title="underline"><u>U</u></button>
+      <button class="tb-btn" data-cmd="strikeThrough" data-i18n-title="strike"><s>S</s></button>
+      <button id="btn-inline-code" class="tb-btn mono" data-i18n-title="inline_code">&lt;/&gt;</button>
+      <label class="tb-color" data-i18n-title="text_color">A<input type="color" id="color-fore" value="#000000"></label>
+      <label class="tb-color hl" data-i18n-title="highlight_color">A<input type="color" id="color-back" value="#ffff00"></label>
+      <button class="tb-btn" data-cmd="removeFormat" data-i18n-title="clear_format">⌫A</button>
+    </div>
+
+    <!-- Lists & indent -->
+    <div class="tb-group">
+      <button class="tb-btn" data-cmd="insertUnorderedList" data-i18n-title="bullets">•≡</button>
+      <button class="tb-btn" data-cmd="insertOrderedList" data-i18n-title="numbering">1≡</button>
+      <button class="tb-btn" data-cmd="outdent" data-i18n-title="outdent">⇤</button>
+      <button class="tb-btn" data-cmd="indent" data-i18n-title="indent">⇥</button>
+    </div>
+
+    <!-- Alignment & direction -->
+    <div class="tb-group">
+      <button class="tb-btn" data-cmd="justifyLeft" data-i18n-title="align_left">⯇☰</button>
+      <button class="tb-btn" data-cmd="justifyCenter" data-i18n-title="align_center">☰</button>
+      <button class="tb-btn" data-cmd="justifyRight" data-i18n-title="align_right">☰⯈</button>
+      <button class="tb-btn" data-cmd="justifyFull" data-i18n-title="justify">≣</button>
+      <button id="btn-ltr" class="tb-btn" data-i18n-title="ltr">LTR</button>
+      <button id="btn-rtl" class="tb-btn" data-i18n-title="rtl">RTL</button>
+    </div>
+
+    <!-- Insert -->
+    <div class="tb-group">
+      <button id="btn-link"  class="tb-btn" data-i18n-title="link">🔗</button>
+      <button id="btn-image" class="tb-btn" data-i18n-title="image">🖼</button>
+      <button id="btn-table" class="tb-btn" data-i18n-title="table">▦</button>
+      <button id="btn-code"  class="tb-btn" data-i18n-title="code_zone">{ }</button>
+      <button class="tb-btn" data-cmd="insertHorizontalRule" data-i18n-title="hr">―</button>
+    </div>
+
+    <!-- View -->
+    <div class="tb-group">
+      <button id="btn-toc" class="tb-btn" data-i18n-title="toc">☰📑</button>
+      <button id="btn-doc-dir" class="tb-btn" data-i18n-title="doc_dir">¶⇄</button>
+      <button id="btn-settings" class="tb-btn" data-i18n-title="settings">⚙</button>
+      <button id="btn-theme" class="tb-btn" data-i18n-title="theme">◐</button>
+      <button id="btn-lang" class="tb-btn" data-i18n-title="ui_lang">EN/فا</button>
+    </div>
+  </div>
+</header>
+
+<main id="layout">
+  <aside id="toc-panel">
+    <div class="toc-head" data-i18n="toc">Table of contents</div>
+    <div id="toc-list"></div>
+  </aside>
+
+  <div id="workspace">
+    <div id="page-wrap">
+      <div id="editor" class="page" contenteditable="true" dir="ltr" spellcheck="true">
+        <h1>Welcome to DocEdit</h1>
+        <p>Open a <b>.md</b>, <b>.docx</b>, <b>.txt</b>, <b>.html</b> or <b>.pdf</b> file — or just start typing. Drag &amp; drop files anywhere on the page.</p>
+        <p dir="rtl">این ویرایشگر از راست‌به‌چپ به‌طور کامل پشتیبانی می‌کند. ✨</p>
+      </div>
+    </div>
+    <button id="code-copy-btn" hidden>⧉</button>
+  </div>
+</main>
+
+<footer id="statusbar">
+  <span id="st-filename">untitled</span>
+  <span class="st-sep">•</span>
+  <span><span id="st-words">0</span> <span data-i18n="words">words</span></span>
+  <span class="st-sep">•</span>
+  <span><span id="st-chars">0</span> <span data-i18n="chars">characters</span></span>
+  <span class="st-right" id="st-save" data-i18n="saved">saved</span>
+</footer>
+
+<!-- Hidden file input -->
+<input type="file" id="file-input" accept=".md,.markdown,.docx,.txt,.html,.htm,.pdf" hidden>
+
+<!-- Modal: insert table -->
+<div class="modal-backdrop" id="modal-table" hidden>
+  <div class="modal">
+    <h3 data-i18n="insert_table">Insert table</h3>
+    <label><span data-i18n="rows">Rows</span> <input type="number" id="tbl-rows" min="1" max="50" value="3"></label>
+    <label><span data-i18n="cols">Columns</span> <input type="number" id="tbl-cols" min="1" max="20" value="3"></label>
+    <div class="modal-actions">
+      <button class="btn-secondary" data-close data-i18n="cancel">Cancel</button>
+      <button class="btn-primary" id="tbl-ok" data-i18n="insert">Insert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: insert code zone -->
+<div class="modal-backdrop" id="modal-code" hidden>
+  <div class="modal">
+    <h3 data-i18n="insert_code">Insert code zone</h3>
+    <label><span data-i18n="language">Language</span>
+      <select id="code-lang">
+        <option value="plaintext">Plain text</option>
+        <option value="javascript" selected>JavaScript</option>
+        <option value="typescript">TypeScript</option>
+        <option value="python">Python</option>
+        <option value="java">Java</option>
+        <option value="csharp">C#</option>
+        <option value="cpp">C/C++</option>
+        <option value="php">PHP</option>
+        <option value="go">Go</option>
+        <option value="rust">Rust</option>
+        <option value="sql">SQL</option>
+        <option value="bash">Bash</option>
+        <option value="json">JSON</option>
+        <option value="xml">HTML/XML</option>
+        <option value="css">CSS</option>
+        <option value="markdown">Markdown</option>
+      </select>
+    </label>
+    <div class="modal-actions">
+      <button class="btn-secondary" data-close data-i18n="cancel">Cancel</button>
+      <button class="btn-primary" id="code-ok" data-i18n="insert">Insert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: settings -->
+<div class="modal-backdrop" id="modal-settings" hidden>
+  <div class="modal">
+    <h3 data-i18n="settings">Settings</h3>
+    <label><span data-i18n="digits_label">Force digits (outside code)</span>
+      <select id="set-digits">
+        <option value="off" data-i18n="digits_off">Off</option>
+        <option value="fa"  data-i18n="digits_fa">Persian (۱۲۳)</option>
+        <option value="en"  data-i18n="digits_en">English (123)</option>
+      </select>
+    </label>
+    <label><span data-i18n="page_size_label">Page size</span>
+      <select id="set-pagesize"></select>
+    </label>
+    <label class="check"><input type="checkbox" id="set-exporttoc" checked>
+      <span data-i18n="export_toc">Include table of contents in exports</span></label>
+    <div class="modal-actions">
+      <button class="btn-secondary" data-close data-i18n="cancel">Cancel</button>
+      <button class="btn-primary" id="set-ok" data-i18n="ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: publish & share -->
+<div class="modal-backdrop" id="modal-publish" hidden>
+  <div class="modal wide-modal">
+    <h3 data-i18n="publish">Publish &amp; share</h3>
+    <label><span data-i18n="pub_server">Server URL</span>
+      <input type="url" id="pub-server" placeholder="https://your-app.vercel.app"></label>
+    <label><span data-i18n="pub_pass">Admin password</span>
+      <input type="password" id="pub-pass"></label>
+    <label><span data-i18n="pub_title_l">Document title</span>
+      <input type="text" id="pub-title"></label>
+    <div class="modal-actions" style="justify-content:flex-start">
+      <button class="btn-primary" id="pub-ok" data-i18n="pub_btn">Publish / update</button>
+    </div>
+
+    <div id="share-section" hidden>
+      <h3 data-i18n="share_section_t">Share links</h3>
+      <label><span data-i18n="share_max_l">Max unique browsers</span>
+        <input type="number" id="share-max" min="1" max="1000" value="5"></label>
+      <label class="check"><input type="checkbox" id="share-comments" checked>
+        <span data-i18n="share_comments_l">Allow comments</span></label>
+      <div class="modal-actions" style="justify-content:flex-start">
+        <button class="btn-primary" id="share-create" data-i18n="create_link">Create private link</button>
+      </div>
+      <div id="share-result" hidden>
+        <input type="text" id="share-link" readonly>
+        <button class="btn-secondary" id="share-copy" data-i18n="copy_link">Copy link</button>
+      </div>
+      <div id="share-list"></div>
+    </div>
+
+    <p id="pub-status" class="pub-status"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" data-close data-i18n="cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Libraries (classic scripts — work over http:// and file://) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://unpkg.com/turndown@7.1.2/dist/turndown.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/html-docx-js@0.3.1/dist/html-docx.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script src="js/i18n.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/toc.js"></script>
+<script src="js/io.js"></script>
+<script src="js/publish.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
