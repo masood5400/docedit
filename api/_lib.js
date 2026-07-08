@@ -3,26 +3,45 @@
 
 const crypto = require("crypto");
 
-const REDIS_URL =
+/* Supports BOTH storage styles:
+   1) Upstash REST  — UPSTASH_REDIS_REST_URL/_TOKEN or KV_REST_API_URL/_TOKEN
+   2) Any Redis TCP — REDIS_URL (redis:// or rediss://), e.g. Vercel Marketplace "Redis" */
+const REST_URL =
   process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-const REDIS_TOKEN =
+const REST_TOKEN =
   process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const TCP_URL = process.env.REDIS_URL || process.env.KV_URL;
+
+let tcpClient = null;
+async function tcp() {
+  if (!tcpClient) {
+    const { createClient } = require("redis");
+    tcpClient = createClient({ url: TCP_URL });
+    tcpClient.on("error", () => { tcpClient = null; });
+    await tcpClient.connect();
+  }
+  return tcpClient;
+}
 
 async function redis(...cmd) {
-  if (!REDIS_URL || !REDIS_TOKEN) {
-    throw new Error("Redis is not configured (set UPSTASH_REDIS_REST_URL / _TOKEN)");
+  if (REST_URL && REST_TOKEN) {
+    const res = await fetch(REST_URL, {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + REST_TOKEN,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(cmd)
+    });
+    const data = await res.json();
+    if (data.error) throw new Error("Redis: " + data.error);
+    return data.result;
   }
-  const res = await fetch(REDIS_URL, {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + REDIS_TOKEN,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(cmd)
-  });
-  const data = await res.json();
-  if (data.error) throw new Error("Redis: " + data.error);
-  return data.result;
+  if (TCP_URL) {
+    const c = await tcp();
+    return c.sendCommand(cmd.map(String));
+  }
+  throw new Error("Redis is not configured (set REDIS_URL or UPSTASH_REDIS_REST_URL/_TOKEN)");
 }
 
 async function getJson(key) {

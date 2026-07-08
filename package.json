@@ -5,5 +5,8 @@
   "description": "Document editor with RTL/LTR support, Google Fonts, code zones, multi-format export, and private share links",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "redis": "^4.7.0"
   }
 }
