@@ -38,16 +38,31 @@ Runs in any modern browser — on the web or locally on Windows. No installation
 
 **Extras** — dark mode (◐), autosave to browser storage (your document survives closing the tab), word/character count, shortcuts: `Ctrl+O` open, `Ctrl+S` export HTML, `Ctrl+P` print/PDF.
 
+**Settings (⚙)** — force digits to Persian (۱۲۳) or English (123) everywhere except code zones; page size (A4/A5/Letter/Legal/Wide) applied to editor, print, and PDF exports; toggle TOC in exports.
+
+**Smart table of contents (☰📑)** — auto-detects headings (H1–H6, plus short fully-bold paragraphs), shows a nested sidebar, click to jump, highlights the current section while scrolling. A linked TOC is embedded in PDF/HTML/DOCX exports.
+
+**Code copy** — hover any code zone for a copy button; exported HTML pages get copy buttons too.
+
+**Publish & private share links (🌐)** — publish documents to your own Vercel deployment (admin-password protected, stored in free Upstash Redis). Create per-reader links with a unique-browser limit (e.g. max 5 browsers — or 1, which locks the link to the first person who opens it), optional comments, usage counters, and revocation. See `DEPLOY.md` for the 10-minute setup on GitHub (masood5400) + Vercel, all on free tiers.
+
 ## Files
 
 ```
 index.html        app shell
+viewer.html       read-only page for shared links (+ comments)
 css/style.css     themes, RTL, print styles
 js/i18n.js        English/Persian UI strings
 js/editor.js      editing core, code zones, direction
+js/settings.js    digit enforcement + page size
+js/toc.js         smart table of contents
 js/io.js          import (md/docx/txt/html/pdf) + export (pdf/docx/md/html/txt/rtf)
+js/publish.js     publish & share-link client
+js/viewer.js      shared-document viewer logic
 js/app.js         Google Fonts, toolbar, theme, init
+api/              Vercel serverless functions (publish/share/doc/comment)
 run-windows.bat   local launcher for Windows
+DEPLOY.md         راهنمای استقرار روی Vercel (فارسی)
 ```
 
 ## Libraries (CDN)
