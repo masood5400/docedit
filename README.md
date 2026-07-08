@@ -44,7 +44,15 @@ Runs in any modern browser — on the web or locally on Windows. No installation
 
 **Code copy** — hover any code zone for a copy button; exported HTML pages get copy buttons too.
 
-**Publish & private share links (🌐)** — publish documents to your own Vercel deployment (admin-password protected, stored in free Upstash Redis). Create per-reader links with a unique-browser limit (e.g. max 5 browsers — or 1, which locks the link to the first person who opens it), optional comments, usage counters, and revocation. See `DEPLOY.md` for the 10-minute setup on GitHub (masood5400) + Vercel, all on free tiers.
+**Accounts, folders & sharing (👤 🗂 🌐)** — work as a guest, or sign in with a fast username+password flow (auto-registers new users). Registered users get folders (`dashboard.html`), can share folders/documents with other users by exact username (read or read+edit), and publish documents to your own Vercel deployment. Share links have a unique-browser limit (the link creator is never counted), optional comments, and a per-link "guests may view / login required" switch.
+
+**Google-Docs-style comments** — readers select any text in the viewer and pin a comment to it (highlighted in the document). Threads support replies, @mentions of users with access, and owner actions: ✓ Done or Dismiss (fades the highlight). Commenting always requires login.
+
+**Custom fonts** — import your own font (woff2/ttf) in Settings; it's embedded in exports and travels with published documents so every reader sees it.
+
+**Super-admin panel (`admin.html`)** — with `ADMIN_PASSWORD`, view all users and all documents (including guest content), read comments, reset user passwords.
+
+**Security** — scrypt password hashing, HMAC-signed sessions, per-IP rate limiting, uniform 404s and generic responses so the API never leaks which users or documents exist. See `DEPLOY.md` for the 10-minute setup on GitHub (masood5400) + Vercel, all on free tiers.
 
 ## Files
 

@@ -39,6 +39,8 @@
         </div>
       </div>
       <button id="btn-publish" class="tb-btn" data-i18n-title="publish">🌐</button>
+      <button id="btn-dashboard" class="tb-btn" data-i18n-title="dashboard">🗂</button>
+      <button id="btn-account" class="tb-btn" data-i18n-title="account">👤</button>
     </div>
 
     <!-- Undo / redo -->
@@ -205,6 +207,9 @@
     </label>
     <label class="check"><input type="checkbox" id="set-exporttoc" checked>
       <span data-i18n="export_toc">Include table of contents in exports</span></label>
+    <label><span data-i18n="font_upload">Import custom font (woff2/ttf)</span>
+      <button class="btn-secondary" id="btn-font-import" type="button">📁 …</button></label>
+    <input type="file" id="font-file-input" accept=".woff2,.woff,.ttf,.otf" hidden>
     <div class="modal-actions">
       <button class="btn-secondary" data-close data-i18n="cancel">Cancel</button>
       <button class="btn-primary" id="set-ok" data-i18n="ok">OK</button>
@@ -216,12 +221,13 @@
 <div class="modal-backdrop" id="modal-publish" hidden>
   <div class="modal wide-modal">
     <h3 data-i18n="publish">Publish &amp; share</h3>
+    <p id="pub-account" class="pub-status" style="margin:0 0 8px"></p>
     <label><span data-i18n="pub_server">Server URL</span>
       <input type="url" id="pub-server" placeholder="https://your-app.vercel.app"></label>
-    <label><span data-i18n="pub_pass">Admin password</span>
-      <input type="password" id="pub-pass"></label>
     <label><span data-i18n="pub_title_l">Document title</span>
       <input type="text" id="pub-title"></label>
+    <label><span data-i18n="folder">Folder</span>
+      <select id="pub-folder"></select></label>
     <div class="modal-actions" style="justify-content:flex-start">
       <button class="btn-primary" id="pub-ok" data-i18n="pub_btn">Publish / update</button>
     </div>
@@ -232,6 +238,8 @@
         <input type="number" id="share-max" min="1" max="1000" value="5"></label>
       <label class="check"><input type="checkbox" id="share-comments" checked>
         <span data-i18n="share_comments_l">Allow comments</span></label>
+      <label class="check"><input type="checkbox" id="share-guestview" checked>
+        <span data-i18n="guest_view">Guests can view without an account</span></label>
       <div class="modal-actions" style="justify-content:flex-start">
         <button class="btn-primary" id="share-create" data-i18n="create_link">Create private link</button>
       </div>
@@ -240,6 +248,17 @@
         <button class="btn-secondary" id="share-copy" data-i18n="copy_link">Copy link</button>
       </div>
       <div id="share-list"></div>
+
+      <h3 data-i18n="grant_user">Give access to a user</h3>
+      <div id="grant-row" style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="grant-user" dir="ltr" placeholder="username" style="flex:1">
+        <select id="grant-role">
+          <option value="read" data-i18n="role_read">read</option>
+          <option value="edit" data-i18n="role_edit">edit</option>
+        </select>
+        <button class="btn-primary" id="grant-ok" data-i18n="grant_btn">Grant</button>
+      </div>
+      <div id="member-list"></div>
     </div>
 
     <p id="pub-status" class="pub-status"></p>
@@ -259,9 +278,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script src="js/i18n.js"></script>
+<script src="js/auth-client.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/toc.js"></script>
+<script src="js/fonts-custom.js"></script>
 <script src="js/io.js"></script>
 <script src="js/publish.js"></script>
 <script src="js/app.js"></script>

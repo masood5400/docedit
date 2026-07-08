@@ -14,23 +14,19 @@
     --muted:#6b7686; --accent:#2f6fed; --accent-soft:#e4edff;
   }
   * { box-sizing:border-box; }
-  body {
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:"Vazirmatn","Inter",system-ui,sans-serif; line-height:1.75;
-  }
-  header {
-    background:var(--panel); border-bottom:1px solid var(--border);
-    padding:12px 20px; display:flex; align-items:center; gap:10px;
-    position:sticky; top:0; z-index:10;
-  }
-  header .title { font-weight:700; font-size:17px; flex:1; }
-  header .meta { color:var(--muted); font-size:12px; }
-  main { max-width:860px; margin:26px auto; padding:0 14px; }
-  .doc {
-    background:var(--panel); border-radius:6px; padding:48px 56px;
-    box-shadow:0 2px 14px rgba(20,30,50,.12); font-size:16px;
-    overflow-wrap:break-word;
-  }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:"Vazirmatn","Inter",system-ui,sans-serif; line-height:1.75; }
+  header { background:var(--panel); border-bottom:1px solid var(--border);
+    padding:10px 18px; display:flex; align-items:center; gap:10px;
+    position:sticky; top:0; z-index:20; }
+  header .title { font-weight:700; font-size:16px; flex:1; }
+  header button { border:1px solid var(--border); background:transparent; color:var(--text);
+    border-radius:8px; padding:6px 12px; cursor:pointer; font-family:inherit; font-size:13px; }
+
+  #wrap { display:flex; max-width:1240px; margin:24px auto; padding:0 14px; gap:18px; align-items:flex-start; }
+  main { flex:1; min-width:0; }
+  .doc { background:var(--panel); border-radius:6px; padding:46px 54px;
+    box-shadow:0 2px 14px rgba(20,30,50,.12); font-size:16px; overflow-wrap:break-word; }
   .doc h1{font-size:2em} .doc h2{font-size:1.55em} .doc h3{font-size:1.25em}
   .doc img{max-width:100%; height:auto;}
   .doc table{border-collapse:collapse; width:100%;}
@@ -46,68 +42,113 @@
   .doc pre.code-zone code{background:none; border:none; padding:0; display:block;}
   .doc [dir="rtl"]{text-align:right;} .doc [dir="ltr"]{text-align:left;}
   nav.toc{border:1px solid var(--border); border-radius:8px; padding:14px 18px; margin:0 0 1.6em; background:#f8fafc;}
-  nav.toc .toc-title{font-weight:700; font-size:1.15em; margin-bottom:.5em;}
-  nav.toc ul{list-style:none; margin:0; padding:0;}
-  nav.toc li{margin:.25em 0;}
+  nav.toc .toc-title{font-weight:700; margin-bottom:.5em;}
+  nav.toc ul{list-style:none; margin:0; padding:0;} nav.toc li{margin:.25em 0;}
   nav.toc a{text-decoration:none; color:var(--accent);}
   nav.toc .toc-l1{margin-inline-start:1.2em;} nav.toc .toc-l2{margin-inline-start:2.4em;}
   nav.toc .toc-l3{margin-inline-start:3.6em;} nav.toc .toc-l4{margin-inline-start:4.8em;}
   .copy-btn{position:absolute; top:6px; left:8px; font-size:11px; padding:2px 8px;
     border:1px solid var(--border); border-radius:5px; background:#fff; cursor:pointer; opacity:.8;}
-  .copy-btn:hover{opacity:1;}
-  /* comments */
-  #comments { margin:30px 0 60px; }
-  #comments h2 { font-size:18px; }
-  .comment {
-    background:var(--panel); border:1px solid var(--border); border-radius:8px;
-    padding:10px 14px; margin:10px 0;
-  }
-  .comment .who { font-weight:600; font-size:13px; }
-  .comment .when { color:var(--muted); font-size:11px; margin-inline-start:8px; }
-  .comment .body { margin-top:4px; font-size:14px; white-space:pre-wrap; }
-  #comment-form { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:14px; }
-  #comment-form input, #comment-form textarea {
-    width:100%; border:1px solid var(--border); border-radius:6px; padding:8px 10px;
-    font-family:inherit; font-size:14px; margin-bottom:8px; background:var(--bg);
-  }
-  #comment-form textarea { min-height:80px; resize:vertical; }
-  #comment-form button {
-    background:var(--accent); color:#fff; border:none; border-radius:6px;
-    padding:8px 22px; cursor:pointer; font-family:inherit; font-size:14px;
-  }
-  /* states */
-  .state {
-    max-width:480px; margin:12vh auto; background:var(--panel); border-radius:12px;
-    box-shadow:0 2px 14px rgba(20,30,50,.12); padding:40px 34px; text-align:center;
-  }
+
+  /* comment highlights */
+  mark.c-hl { background:#ffe58a; padding:0; border-bottom:2px solid #e8b931; cursor:pointer; }
+  mark.c-hl.c-faded { background:#f2f2ee; border-bottom-color:#d5d5cd; opacity:.6; }
+  mark.c-hl.c-pulse { outline:2px solid var(--accent); }
+
+  /* floating comment button */
+  #comment-fab { position:absolute; z-index:60; width:40px; height:34px; border-radius:8px;
+    border:1px solid var(--border); background:var(--panel); cursor:pointer; font-size:16px;
+    box-shadow:0 2px 10px rgba(0,0,0,.2); }
+
+  /* composer */
+  #composer { position:fixed; bottom:20px; inset-inline-start:50%; transform:translateX(50%);
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25); padding:14px; width:min(480px, 92vw); z-index:70; }
+  html[dir="ltr"] #composer { transform:translateX(-50%); }
+  #composer-quote { font-size:12px; color:var(--muted); margin-bottom:8px; }
+  #composer textarea, .reply-box textarea { width:100%; min-height:70px; border:1px solid var(--border);
+    border-radius:8px; padding:8px 10px; font-family:inherit; font-size:14px; resize:vertical; background:var(--bg); }
+  #composer .row { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+  #composer button, .thread button, .reply-box button {
+    border:1px solid var(--border); background:transparent; color:var(--text);
+    border-radius:7px; padding:5px 14px; cursor:pointer; font-family:inherit; font-size:12.5px; }
+  button.primary { background:var(--accent) !important; border-color:var(--accent) !important; color:#fff !important; }
+
+  /* threads panel */
+  #comments-panel { width:320px; flex-shrink:0; position:sticky; top:70px;
+    max-height:calc(100vh - 90px); overflow-y:auto; }
+  #comments-panel h2 { font-size:15px; margin:4px 4px 10px; }
+  .thread { background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:10px 12px; margin-bottom:10px; font-size:13.5px; }
+  .thread.closed { opacity:.55; }
+  .t-quote { font-size:11.5px; color:var(--accent); cursor:pointer; margin-bottom:6px;
+    border-inline-start:3px solid var(--accent); padding-inline-start:6px; }
+  .t-head span { color:var(--muted); font-size:11px; }
+  .t-body { margin:4px 0; white-space:pre-wrap; }
+  .t-reply { border-top:1px dashed var(--border); margin-top:8px; padding-top:6px; font-size:13px; }
+  .t-reply span { color:var(--muted); font-size:10.5px; }
+  .t-actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .badge { background:#eee; border-radius:10px; padding:1px 8px; font-size:10.5px; }
+  .badge.done { background:#d8f5dd; color:#1d7a34; }
+  .mention { color:var(--accent); font-weight:600; }
+  .mention-box { background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    margin-top:4px; display:flex; flex-direction:column; }
+  .mention-box button { text-align:start; border:none; padding:6px 10px; cursor:pointer;
+    background:none; color:var(--text); font-family:inherit; }
+  .mention-box button:hover { background:var(--accent-soft); }
+  .reply-box { margin-top:8px; }
+  .reply-box button { margin-top:6px; }
+
+  .login-banner { background:var(--accent-soft); border:1px solid var(--accent);
+    border-radius:10px; padding:10px 14px; margin-bottom:14px; display:flex; gap:10px;
+    align-items:center; font-size:13.5px; flex-wrap:wrap; }
+  .login-banner span { flex:1; min-width:200px; }
+  .login-banner button { border:none; background:var(--accent); color:#fff; border-radius:7px;
+    padding:6px 16px; cursor:pointer; font-family:inherit; }
+  .login-banner button.ghost { background:transparent; color:var(--muted); }
+
+  .state { max-width:480px; margin:12vh auto; background:var(--panel); border-radius:12px;
+    box-shadow:0 2px 14px rgba(20,30,50,.12); padding:40px 34px; text-align:center; }
   .state .icon { font-size:44px; }
-  .state h2 { margin:14px 0 6px; }
-  .state p { color:var(--muted); font-size:14px; margin:4px 0; }
-  @media (max-width:720px){ .doc{padding:22px 16px;} }
-  @media print { header, #comments { display:none; } body{background:#fff;} .doc{box-shadow:none;} }
+  .state p { color:var(--muted); font-size:14px; }
+  .btn-login { margin-top:12px; border:none; background:var(--accent); color:#fff;
+    border-radius:8px; padding:9px 26px; cursor:pointer; font-family:inherit; font-size:14px; }
+
+  @media (max-width:900px){ #wrap{flex-direction:column;} #comments-panel{width:100%; position:static; max-height:none;} .doc{padding:22px 16px;} }
+  @media print { header, #comments-panel, #composer, #comment-fab, .login-banner { display:none !important; } body{background:#fff;} .doc{box-shadow:none;} }
 </style>
 </head>
 <body>
 <header>
   <span style="font-size:20px">📝</span>
   <span class="title" id="doc-title">…</span>
-  <span class="meta" id="doc-meta"></span>
+  <button id="viewer-account">👤 ورود</button>
 </header>
 
-<main>
-  <div id="content"></div>
-  <section id="comments" hidden>
-    <h2>💬 دیدگاه‌ها <span style="font-weight:400;font-size:13px;color:var(--muted)">/ Comments</span></h2>
-    <div id="comment-list"></div>
-    <div id="comment-form">
-      <input id="c-name" placeholder="نام شما / Your name" maxlength="60">
-      <textarea id="c-text" placeholder="دیدگاه خود را بنویسید… / Write a comment…" maxlength="2000"></textarea>
-      <button id="c-send">ارسال / Send</button>
-    </div>
-  </section>
-</main>
+<div id="wrap">
+  <main>
+    <div id="content"></div>
+  </main>
+  <aside id="comments-panel" hidden>
+    <h2>💬 دیدگاه‌ها (<span id="threads-count">0</span> باز)</h2>
+    <div id="thread-list"></div>
+  </aside>
+</div>
+
+<button id="comment-fab" hidden title="کامنت روی متن انتخاب‌شده">💬</button>
+
+<div id="composer" hidden>
+  <div id="composer-quote"></div>
+  <textarea id="composer-text" placeholder="کامنت… (@ برای منشن کاربران)"></textarea>
+  <div class="mention-box" id="composer-mentions" hidden></div>
+  <div class="row">
+    <button id="composer-cancel">انصراف</button>
+    <button id="composer-send" class="primary">ثبت کامنت</button>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="js/auth-client.js"></script>
 <script src="js/viewer.js"></script>
 </body>
 </html>

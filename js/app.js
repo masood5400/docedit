@@ -221,6 +221,8 @@ function toggleTheme() {
   applyPageSize();
   initPublishUI();
   initCodeCopyButton();
+  initFontImportUI();
+  injectCustomFonts();
 
   // restore autosaved document
   const saved = localStorage.getItem("de_autosave");
@@ -235,4 +237,5 @@ function toggleTheme() {
   initToc();
   editor.addEventListener("input", scheduleDigitEnforce);
   refreshStatus();
+  maybeLoadRemoteDoc();
 })();

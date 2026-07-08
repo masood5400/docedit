@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocEdit — پنل مدیریت</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#14181f; --panel:#1d232d; --border:#313a48; --text:#e6eaf1;
+          --muted:#8b96a8; --accent:#5b8dff; --accent-soft:#23334f; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:"Vazirmatn",system-ui,sans-serif; font-size:14px; }
+  header { background:var(--panel); border-bottom:1px solid var(--border);
+    padding:12px 20px; display:flex; gap:10px; align-items:center; }
+  header .title { font-weight:700; flex:1; }
+  main { max-width:1100px; margin:22px auto; padding:0 16px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:16px 18px; margin-bottom:16px; }
+  .card h2 { margin:0 0 10px; font-size:15px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { border-bottom:1px solid var(--border); padding:7px 8px; text-align:start; }
+  th { color:var(--muted); font-weight:600; }
+  input { height:34px; border:1px solid var(--border); border-radius:8px; background:var(--bg);
+    color:var(--text); padding:0 10px; font-family:inherit; }
+  button { border:1px solid var(--border); background:transparent; color:var(--text);
+    border-radius:7px; padding:5px 14px; cursor:pointer; font-family:inherit; font-size:12.5px; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .muted { color:var(--muted); }
+  #login-card { max-width:420px; margin:14vh auto; }
+  #login-card input { width:100%; margin-bottom:10px; direction:ltr; }
+  #doc-view { background:#fff; color:#1c2330; border-radius:8px; padding:26px 30px; margin-top:12px;
+    max-height:70vh; overflow:auto; line-height:1.75; }
+  #doc-view [dir="rtl"]{text-align:right;} #doc-view [dir="ltr"]{text-align:left;}
+  #doc-view pre { direction:ltr; text-align:left; background:#f4f6f8; padding:10px; border-radius:6px; overflow-x:auto; }
+  .cmt { border-top:1px dashed var(--border); padding:6px 2px; font-size:12.5px; }
+  .err { color:#ff7b7b; min-height:18px; font-size:13px; }
+  .badge { background:var(--accent-soft); border-radius:9px; padding:1px 9px; font-size:11px; }
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:20px">🛡</span>
+  <span class="title">پنل مدیریت DocEdit</span>
+  <a href="index.html" style="color:var(--muted);text-decoration:none">✏️ ویرایشگر</a>
+</header>
+
+<main>
+  <div class="card" id="login-card">
+    <h2>ورود مدیر ارشد</h2>
+    <input id="adm-server" placeholder="https://your-app.vercel.app (خالی = همین دامنه)" >
+    <input id="adm-pass" type="password" placeholder="ADMIN_PASSWORD">
+    <p class="err" id="adm-err"></p>
+    <button class="primary" id="adm-go" style="width:100%;height:38px">ورود</button>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="card">
+      <h2>👥 کاربران (<span id="u-count">0</span>)</h2>
+      <table id="users-table"><thead><tr>
+        <th>نام کاربری</th><th>تاریخ ثبت‌نام</th><th>اسناد</th><th></th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>📄 همه اسناد — شامل مهمان‌ها (<span id="d-count">0</span>)</h2>
+      <table id="docs-table"><thead><tr>
+        <th>عنوان</th><th>مالک</th><th>به‌روزرسانی</th><th>لینک‌ها</th><th>کامنت</th><th>حجم</th><th></th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card" id="doc-card" hidden>
+      <h2 id="doc-view-title">سند</h2>
+      <div id="doc-view"></div>
+      <div id="doc-comments"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let PASS = "";
+
+function base() {
+  const v = $("adm-server").value.trim();
+  return (v || location.origin).replace(/\/+$/, "");
+}
+async function adminApi(body) {
+  const res = await fetch(base() + "/api/admin", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(Object.assign({ password: PASS }, body))
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || res.status);
+  return data;
+}
+
+$("adm-server").value = localStorage.getItem("de_server") || "";
+
+$("adm-go").addEventListener("click", async () => {
+  PASS = $("adm-pass").value;
+  $("adm-err").textContent = "…";
+  try {
+    const data = await adminApi({ action: "overview" });
+    localStorage.setItem("de_server", $("adm-server").value.trim());
+    $("adm-err").textContent = "";
+    $("login-card").hidden = true;
+    $("panel").hidden = false;
+    render(data);
+  } catch (e) {
+    $("adm-err").textContent = e.message === "wrong_password" ? "گذرواژه اشتباه است" :
+      e.message === "too_many_attempts" ? "تلاش زیاد — یک دقیقه صبر کن" : "خطا: " + e.message;
+  }
+});
+
+function fa(ts) { try { return new Date(ts).toLocaleDateString("fa-IR"); } catch (e) { return ""; } }
+function kb(n) { return n > 1024 ? Math.round(n / 1024) + "KB" : n + "B"; }
+
+function render(data) {
+  $("u-count").textContent = data.users.length;
+  const ut = $("users-table").querySelector("tbody");
+  ut.innerHTML = "";
+  data.users.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>👤 " + u.username + "</td><td>" + fa(u.createdAt) +
+      "</td><td>" + u.docs + "</td>";
+    const td = document.createElement("td");
+    const rp = document.createElement("button");
+    rp.textContent = "🔑 بازنشانی گذرواژه";
+    rp.addEventListener("click", async () => {
+      const npw = prompt("گذرواژه جدید برای " + u.username + " (حداقل ۶ نویسه):");
+      if (!npw) return;
+      try { await adminApi({ action: "resetpw", username: u.username, newPassword: npw }); alert("انجام شد"); }
+      catch (e) { alert("خطا: " + e.message); }
+    });
+    td.appendChild(rp);
+    tr.appendChild(td);
+    ut.appendChild(tr);
+  });
+
+  $("d-count").textContent = data.docs.length;
+  const dt = $("docs-table").querySelector("tbody");
+  dt.innerHTML = "";
+  data.docs.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>📄 " + (d.title || "—") + "</td><td>" +
+      (d.guest ? '<span class="badge">مهمان</span>' : d.owner) + "</td><td>" + fa(d.updatedAt) +
+      "</td><td>" + d.shares + "</td><td>" + d.comments + "</td><td>" + kb(d.size) + "</td>";
+    const td = document.createElement("td");
+    const open = document.createElement("button");
+    open.textContent = "👁 دیدن";
+    open.addEventListener("click", () => openDoc(d.id, d.title));
+    td.appendChild(open);
+    tr.appendChild(td);
+    dt.appendChild(tr);
+  });
+}
+
+async function openDoc(id, title) {
+  try {
+    const data = await adminApi({ action: "doc", docId: id });
+    $("doc-card").hidden = false;
+    $("doc-view-title").textContent = "📄 " + title;
+    const v = $("doc-view");
+    v.dir = data.doc.dir || "ltr";
+    v.innerHTML = (data.doc.toc || "") + data.doc.html;
+    const c = $("doc-comments");
+    c.innerHTML = data.comments.length ? "<h2 style='font-size:14px'>💬 کامنت‌ها</h2>" : "";
+    data.comments.forEach(cm => {
+      const div = document.createElement("div");
+      div.className = "cmt";
+      div.textContent = "👤 " + (cm.author ? cm.author.username : "?") + " — " +
+        (cm.quote ? "«" + cm.quote.slice(0, 40) + "» — " : "") + cm.text +
+        " [" + (cm.status || "open") + "]" +
+        (cm.replies && cm.replies.length ? " (+" + cm.replies.length + " پاسخ)" : "");
+      c.appendChild(div);
+    });
+    $("doc-card").scrollIntoView({ behavior: "smooth" });
+  } catch (e) { alert("خطا: " + e.message); }
+}
+</script>
+</body>
+</html>

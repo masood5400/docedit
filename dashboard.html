@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocEdit — پوشه‌ها و اسناد</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#eef1f5; --panel:#fff; --border:#d9dee5; --text:#1c2330;
+          --muted:#6b7686; --accent:#2f6fed; --accent-soft:#e4edff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:"Vazirmatn",system-ui,sans-serif; }
+  header { background:var(--panel); border-bottom:1px solid var(--border);
+    padding:12px 20px; display:flex; align-items:center; gap:12px; }
+  header .title { font-weight:700; flex:1; }
+  header a, header button { border:1px solid var(--border); background:transparent; color:var(--text);
+    border-radius:8px; padding:6px 14px; cursor:pointer; font-family:inherit;
+    font-size:13px; text-decoration:none; }
+  main { max-width:980px; margin:24px auto; padding:0 16px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:18px 20px; margin-bottom:18px; }
+  .card h2 { margin:0 0 12px; font-size:16px; }
+  .row { display:flex; gap:8px; align-items:center; padding:8px 4px;
+    border-top:1px solid var(--border); font-size:14px; flex-wrap:wrap; }
+  .row:first-of-type { border-top:none; }
+  .row .grow { flex:1; min-width:140px; }
+  .row .meta { color:var(--muted); font-size:12px; }
+  button.act { border:1px solid var(--border); background:transparent; color:var(--text);
+    border-radius:7px; padding:4px 12px; cursor:pointer; font-family:inherit; font-size:12.5px; }
+  button.act:hover { background:var(--accent-soft); }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  input, select { height:34px; border:1px solid var(--border); border-radius:8px;
+    padding:0 10px; font-family:inherit; font-size:13.5px; background:var(--bg); color:var(--text); }
+  .inline-form { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  #server-row { display:flex; gap:8px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  #server-row input { flex:1; min-width:220px; direction:ltr; }
+  .empty { color:var(--muted); font-size:13px; padding:8px 4px; }
+</style>
+</head>
+<body>
+<header>
+  <span style="font-size:20px">🗂</span>
+  <span class="title">پوشه‌ها و اسناد من</span>
+  <a href="index.html">✏️ ویرایشگر</a>
+  <button id="dash-account">👤</button>
+</header>
+
+<main>
+  <div id="server-row">
+    <span>آدرس سرور:</span>
+    <input id="dash-server" placeholder="https://your-app.vercel.app">
+    <button class="act" id="dash-server-save">ذخیره</button>
+  </div>
+
+  <div class="card">
+    <h2>📁 پوشه‌های من</h2>
+    <div id="folder-list"><div class="empty">…</div></div>
+    <div class="inline-form">
+      <input id="new-folder-name" placeholder="نام پوشه جدید">
+      <button class="act primary" id="new-folder-btn">ساخت پوشه</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📄 اسناد من</h2>
+    <div id="doc-list"><div class="empty">…</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🤝 به اشتراک گذاشته‌شده با من</h2>
+    <div id="shared-list"><div class="empty">…</div></div>
+  </div>
+</main>
+
+<script src="js/auth-client.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

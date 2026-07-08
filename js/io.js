@@ -237,7 +237,7 @@ function buildFullHtml(forWord = false) {
 <title>${escapeHtml(currentFileName)}</title>
 ${forWord ? "" : collectFontLinks()}
 ${hl}
-<style>${EXPORT_CSS}${TOC_CSS}${pageRule}</style>
+<style>${EXPORT_CSS}${TOC_CSS}${pageRule}${typeof customFontCss === "function" ? customFontCss() : ""}</style>
 </head>
 <body dir="${dir}">
 ${toc}

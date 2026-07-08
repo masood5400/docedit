@@ -1,11 +1,9 @@
-/* DocEdit serverless helpers — zero-dependency Upstash Redis REST client */
+/* DocEdit serverless core: Redis (REST or TCP), auth, sessions, rate limiting */
 "use strict";
 
 const crypto = require("crypto");
 
-/* Supports BOTH storage styles:
-   1) Upstash REST  — UPSTASH_REDIS_REST_URL/_TOKEN or KV_REST_API_URL/_TOKEN
-   2) Any Redis TCP — REDIS_URL (redis:// or rediss://), e.g. Vercel Marketplace "Redis" */
+/* ---------------- Redis (both styles) ---------------- */
 const REST_URL =
   process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const REST_TOKEN =
@@ -48,49 +46,119 @@ async function getJson(key) {
   const v = await redis("GET", key);
   return v ? JSON.parse(v) : null;
 }
+async function setJson(key, obj) { return redis("SET", key, JSON.stringify(obj)); }
+async function delKey(key) { return redis("DEL", key); }
 
-async function setJson(key, obj) {
-  return redis("SET", key, JSON.stringify(obj));
-}
+function rid(bytes = 16) { return crypto.randomBytes(bytes).toString("base64url"); }
 
-async function delKey(key) {
-  return redis("DEL", key);
-}
-
-function rid(bytes = 16) {
-  return crypto.randomBytes(bytes).toString("base64url");
-}
-
+/* ---------------- HTTP helpers ---------------- */
 function cors(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "content-type");
+  res.setHeader("Access-Control-Allow-Headers", "content-type,x-session");
 }
-
-function send(res, code, obj) {
-  cors(res);
-  res.status(code).json(obj);
-}
-
-/* returns true if handled (OPTIONS preflight) */
+function send(res, code, obj) { cors(res); res.status(code).json(obj); }
 function preflight(req, res) {
-  if (req.method === "OPTIONS") {
-    cors(res);
-    res.status(204).end();
-    return true;
-  }
+  if (req.method === "OPTIONS") { cors(res); res.status(204).end(); return true; }
   return false;
 }
+function getIp(req) {
+  const h = req.headers || {};
+  return String(h["x-forwarded-for"] || h["x-real-ip"] || "0.0.0.0").split(",")[0].trim();
+}
 
+/* ---------------- rate limiting (per IP per action) ---------------- */
+async function rateLimit(req, action, limit, windowSec = 60) {
+  try {
+    const key = "rl:" + action + ":" + getIp(req);
+    const n = await redis("INCR", key);
+    if (Number(n) === 1) await redis("EXPIRE", key, windowSec);
+    return Number(n) <= limit;
+  } catch (e) {
+    return true; // fail open — availability over strictness
+  }
+}
+
+/* ---------------- admin ---------------- */
 function checkPassword(pw) {
   const expected = process.env.ADMIN_PASSWORD;
   if (!expected) throw new Error("ADMIN_PASSWORD env var is not set on the server");
   if (typeof pw !== "string" || pw.length !== expected.length) return false;
-  try {
-    return crypto.timingSafeEqual(Buffer.from(pw), Buffer.from(expected));
-  } catch (e) {
-    return false;
-  }
+  try { return crypto.timingSafeEqual(Buffer.from(pw), Buffer.from(expected)); }
+  catch (e) { return false; }
 }
 
-module.exports = { redis, getJson, setJson, delKey, rid, send, preflight, checkPassword };
+/* ---------------- passwords (scrypt) ---------------- */
+function hashPassword(password, salt = null) {
+  salt = salt || crypto.randomBytes(16).toString("base64url");
+  const hash = crypto.scryptSync(String(password), salt, 32).toString("base64url");
+  return { salt, hash };
+}
+function verifyPassword(password, salt, expectedHash) {
+  const { hash } = hashPassword(password, salt);
+  try { return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash)); }
+  catch (e) { return false; }
+}
+
+/* ---------------- stateless sessions (HMAC) ---------------- */
+function sessionSecret() {
+  const s = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD;
+  if (!s) throw new Error("SESSION_SECRET (or ADMIN_PASSWORD) env var is required");
+  return crypto.createHash("sha256").update("docedit-session:" + s).digest();
+}
+function signSession(uid, days = 30) {
+  const payload = Buffer.from(JSON.stringify({
+    uid, exp: Date.now() + days * 86400000
+  })).toString("base64url");
+  const sig = crypto.createHmac("sha256", sessionSecret())
+    .update(payload).digest("base64url");
+  return payload + "." + sig;
+}
+function verifySession(token) {
+  if (!token || typeof token !== "string" || !token.includes(".")) return null;
+  const [payload, sig] = token.split(".");
+  const expect = crypto.createHmac("sha256", sessionSecret())
+    .update(payload).digest("base64url");
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expect))) return null;
+  } catch (e) { return null; }
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString());
+    if (!data.uid || data.exp < Date.now()) return null;
+    return data;
+  } catch (e) { return null; }
+}
+
+/* resolve the requesting user (or null for guests) */
+async function sessionUser(req) {
+  const token = (req.headers && req.headers["x-session"]) ||
+    (req.query && req.query.s) || (req.body && req.body.session);
+  const data = verifySession(token);
+  if (!data) return null;
+  const user = await getJson("user:" + data.uid);
+  return user || null;
+}
+
+/* ---------------- usernames ---------------- */
+function normalizeUsername(u) {
+  u = String(u || "").trim().toLowerCase();
+  return /^[a-z0-9_.-]{3,32}$/.test(u) ? u : null;
+}
+
+/* ---------------- doc access helper ----------------
+   Returns { level: "owner"|"edit"|"read"|null } for a session user on a doc. */
+function userDocAccess(doc, user) {
+  if (!user) return null;
+  if (doc.owner && doc.owner === user.id) return "owner";
+  const role = doc.sharedWith && doc.sharedWith[user.id];
+  if (role) return role; // "read" | "edit"
+  return null;
+}
+
+module.exports = {
+  redis, getJson, setJson, delKey, rid,
+  cors, send, preflight, getIp, rateLimit,
+  checkPassword, hashPassword, verifyPassword,
+  signSession, verifySession, sessionUser,
+  normalizeUsername, userDocAccess
+};
